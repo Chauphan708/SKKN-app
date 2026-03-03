@@ -1,0 +1,88 @@
+.header {
+    height: var(--header-height);
+    background-color: var(--surface);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.left {
+    display: flex;
+    align-items: center;
+}
+
+.pageInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.pageTitle {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.25rem;
+}
+
+.pageDescription {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.creditBtn {
+    font-weight: 600;
+    color: var(--primary);
+    border-color: var(--primary-light);
+    background-color: var(--primary-light);
+}
+
+.creditBtn:hover {
+    background-color: #d6bcfa;
+}
+
+.userProfile {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding-left: 1rem;
+    border-left: 1px solid var(--border);
+}
+
+.avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.userInfo {
+    display: flex;
+    flex-direction: column;
+}
+
+.userName {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+}
+
+.userRole {
+    font-size: 0.75rem;
+    color: var(--primary);
+    font-weight: 500;
+    cursor: pointer;
+}

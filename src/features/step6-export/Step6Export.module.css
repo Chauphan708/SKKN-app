@@ -1,0 +1,81 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    padding-bottom: 2rem;
+}
+
+.header {
+    margin-bottom: 1rem;
+}
+
+.header h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: var(--text-main);
+}
+
+.header p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+}
+
+.previewCard {
+    padding: 2rem;
+    background-color: #fff;
+    /* Trắng tinh cho giống giấy */
+    color: #000;
+}
+
+.documentTitle {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+    text-transform: uppercase;
+}
+
+.authorInfo {
+    margin-bottom: 2rem;
+    text-align: right;
+    font-style: italic;
+    color: #555;
+    line-height: 1.6;
+}
+
+.documentBody {
+    line-height: 1.6;
+}
+
+.section {
+    margin-bottom: 1.5rem;
+}
+
+.sectionTitle {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.75rem;
+    color: #000;
+}
+
+.sectionContent {
+    white-space: pre-wrap;
+    font-family: 'Times New Roman', Times, serif;
+    font-size: 1.1rem;
+    text-align: justify;
+}
+
+.actionRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 2rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Ẩn khu vực chứa nội dung in ấn khỏi giao diện thường */
+.printOnlyArea {
+    display: none;
+}
