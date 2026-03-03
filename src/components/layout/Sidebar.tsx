@@ -1,4 +1,6 @@
-import React from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import styles from './Sidebar.module.css';
 import { useWorkflowStore } from '@/store/workflowStore';
 import {
@@ -7,11 +9,39 @@ import {
     PenTool,
     FileCheck2,
     Paperclip,
-    Download
+    Download,
+    Moon,
+    Sun
 } from 'lucide-react';
 
 export const Sidebar = () => {
     const { currentView } = useWorkflowStore();
+    const [isDarkMode, setIsDarkMode] = useState(false);
+
+    // Xử lý bật tắt Dark Mode
+    useEffect(() => {
+        // Lấy config từ LocalStorage ra khi tải trang mới
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark') {
+            setIsDarkMode(true);
+            document.documentElement.classList.add('dark');
+        } else {
+            setIsDarkMode(false);
+            document.documentElement.classList.remove('dark');
+        }
+    }, []);
+
+    const toggleTheme = () => {
+        if (isDarkMode) {
+            document.documentElement.classList.remove('dark');
+            localStorage.setItem('theme', 'light');
+            setIsDarkMode(false);
+        } else {
+            document.documentElement.classList.add('dark');
+            localStorage.setItem('theme', 'dark');
+            setIsDarkMode(true);
+        }
+    };
 
     const getIsActive = (stepView: string, id: number) => {
         if (currentView === 'generator') return stepView === 'step1';
@@ -52,7 +82,17 @@ export const Sidebar = () => {
                 })}
             </nav>
 
-            <div className={styles.footer}>
+            <div className={styles.footer} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                <div
+                    className={styles.helpLink}
+                    onClick={toggleTheme}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', borderRadius: '8px', background: 'var(--background)' }}
+                >
+                    {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                    <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
+                        {isDarkMode ? 'Bật nền sáng' : 'Bật nền tối'}
+                    </span>
+                </div>
                 <div className={styles.helpLink}>
                     <span>📖 Hướng dẫn sử dụng</span>
                 </div>
