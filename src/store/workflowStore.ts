@@ -1,3 +1,4 @@
+'use client';
 import { useProjectStore } from './projectStore';
 import { useUIStore } from './uiStore';
 

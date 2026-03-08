@@ -1,3 +1,4 @@
+'use client';
 import { universalAiAction } from '@/app/actions/ai-universal';
 import { useSettingsStore } from '@/store/settingsStore';
 
