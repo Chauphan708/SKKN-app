@@ -45,11 +45,22 @@ export async function universalAiAction<T>(
                     response_format: { type: "json_object" }
                 })
             });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`OpenAI Error: ${errorData.error?.message || response.statusText}`);
+            }
+
             const data = await response.json();
-            const content = data.choices[0].message.content;
+            const content = data.choices[0]?.message?.content;
+            if (!content) throw new Error("OpenAI không trả về nội dung.");
+
             const parsed = JSON.parse(content);
-            // OpenAI often wraps in an object, we need to extract the array if T is an array
-            return (Array.isArray(parsed) ? parsed : Object.values(parsed)[0]) as T[];
+            // OpenAI response format usually wraps top level object, so we look for array
+            if (Array.isArray(parsed)) return parsed as T[];
+            const keys = Object.keys(parsed);
+            if (keys.length > 0 && Array.isArray(parsed[keys[0]])) return parsed[keys[0]] as T[];
+            return [parsed] as unknown as T[]; // Fallback
         }
 
         if (provider === 'claude') {
