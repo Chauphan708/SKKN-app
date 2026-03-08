@@ -6,6 +6,7 @@ import { Sidebar } from './Sidebar';
 import { Header } from './Header';
 import ErrorBoundary from '../ErrorBoundary';
 import { Toaster } from 'sonner';
+import { useProjectStore } from '@/store/projectStore';
 
 interface MainLayoutProps {
     children: React.ReactNode;
@@ -16,6 +17,30 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
 
     React.useEffect(() => {
         setMounted(true);
+
+        // Auto-save logic (debounced) - moved from store to avoid SSR issues
+        let saveTimeout: NodeJS.Timeout;
+        const unsubscribe = useProjectStore.subscribe((state, prevState) => {
+            if (JSON.stringify(state.workflowData) !== JSON.stringify(prevState.workflowData) ||
+                JSON.stringify(state.formData) !== JSON.stringify(prevState.formData) ||
+                JSON.stringify(state.skknSections) !== JSON.stringify(prevState.skknSections)) {
+
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(async () => {
+                    try {
+                        console.log("Auto-saving project data...");
+                        useProjectStore.getState().markAsSaved();
+                    } catch (error) {
+                        console.error("Failed to auto-save:", error);
+                    }
+                }, 3000);
+            }
+        });
+
+        return () => {
+            unsubscribe();
+            clearTimeout(saveTimeout);
+        };
     }, []);
 
     if (!mounted) {
