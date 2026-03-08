@@ -12,6 +12,16 @@ interface MainLayoutProps {
 }
 
 export const MainLayout = ({ children }: MainLayoutProps) => {
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return <div className={styles.layout} style={{ visibility: 'hidden' }}>{children}</div>;
+    }
+
     return (
         <div className={styles.layout}>
             <Sidebar />

@@ -8,11 +8,11 @@ const getModels = () => {
         console.error('GEMINI_API_KEY is not configured');
         // Không throw nữa để tránh sập render, chỉ trả về model lỗi khi gọi thực tế
     }
-    const genAI = new GoogleGenerativeAI(apiKey || '');
-    return {
-        model: genAI.getGenerativeModel({ model: "gemini-1.5-pro" }),
-        fastModel: genAI.getGenerativeModel({ model: "gemini-1.5-flash" })
-    };
+    const genAI = new GoogleGenerativeAI(apiKey || 'dummy_key');
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+    const fastModel = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+
+    return { model, fastModel };
 };
 
 export async function generateAction<T>(prompt: string, isFast = true): Promise<T[]> {
