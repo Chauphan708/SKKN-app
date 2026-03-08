@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { MainLayout } from "@/components/layout/MainLayout";
-
-const inter = Inter({ subsets: ["latin", "vietnamese"] });
 
 export const metadata: Metadata = {
   title: "Trợ lý AI Viết SKKN",
@@ -17,7 +13,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body suppressHydrationWarning>
         {children}
       </body>
     </html>
