@@ -69,7 +69,13 @@ export const useSettingsStore = create<SettingsState>()(
         }),
         {
             name: 'skkn-settings-storage',
-            storage: createJSONStorage(() => localStorage),
+            storage: createJSONStorage(() =>
+                typeof window !== 'undefined' ? localStorage : {
+                    getItem: () => null,
+                    setItem: () => { },
+                    removeItem: () => { },
+                }
+            ),
         }
     )
 );

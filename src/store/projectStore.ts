@@ -85,30 +85,38 @@ export const useProjectStore = create<ProjectState>()(
         }),
         {
             name: 'skkn-project-storage',
-            storage: createJSONStorage(() => localStorage),
+            storage: createJSONStorage(() =>
+                typeof window !== 'undefined' ? localStorage : {
+                    getItem: () => null,
+                    setItem: () => { },
+                    removeItem: () => { },
+                }
+            ),
         }
     )
 );
 
 // Auto-save logic (debounced)
-let saveTimeout: NodeJS.Timeout;
-useProjectStore.subscribe((state, prevState) => {
-    // Chỉ lưu nếu có thay đổi dữ liệu thực sự (không phải chỉ thay đổi timestamp lưu)
-    if (JSON.stringify(state.workflowData) !== JSON.stringify(prevState.workflowData) ||
-        JSON.stringify(state.formData) !== JSON.stringify(prevState.formData) ||
-        JSON.stringify(state.skknSections) !== JSON.stringify(prevState.skknSections)) {
+if (typeof window !== 'undefined') {
+    let saveTimeout: NodeJS.Timeout;
+    useProjectStore.subscribe((state, prevState) => {
+        // Chỉ lưu nếu có thay đổi dữ liệu thực sự (không phải chỉ thay đổi timestamp lưu)
+        if (JSON.stringify(state.workflowData) !== JSON.stringify(prevState.workflowData) ||
+            JSON.stringify(state.formData) !== JSON.stringify(prevState.formData) ||
+            JSON.stringify(state.skknSections) !== JSON.stringify(prevState.skknSections)) {
 
-        clearTimeout(saveTimeout);
-        saveTimeout = setTimeout(async () => {
-            try {
-                // Giả lập hoặc gọi Supabase thực tế ở đây
-                console.log("Auto-saving to Supabase...");
-                // const { supabase } = await import('@/lib/supabase/client');
-                // await supabase.from('projects').upsert({...state});
-                useProjectStore.getState().markAsSaved();
-            } catch (error) {
-                console.error("Failed to auto-save:", error);
-            }
-        }, 3000); // 3 seconds debounce
-    }
-});
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(async () => {
+                try {
+                    // Giả lập hoặc gọi Supabase thực tế ở đây
+                    console.log("Auto-saving to Supabase...");
+                    // const { supabase } = await import('@/lib/supabase/client');
+                    // await supabase.from('projects').upsert({...state});
+                    useProjectStore.getState().markAsSaved();
+                } catch (error) {
+                    console.error("Failed to auto-save:", error);
+                }
+            }, 3000); // 3 seconds debounce
+        }
+    });
+}
