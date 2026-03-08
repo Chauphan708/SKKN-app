@@ -1,11 +1,12 @@
 'use server';
 
-import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const getModels = () => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey && process.env.NODE_ENV === 'production') {
-        throw new Error('GEMINI_API_KEY is not configured');
+        console.error('GEMINI_API_KEY is not configured');
+        // Không throw nữa để tránh sập render, chỉ trả về model lỗi khi gọi thực tế
     }
     const genAI = new GoogleGenerativeAI(apiKey || '');
     return {
