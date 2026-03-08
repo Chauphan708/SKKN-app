@@ -7,7 +7,7 @@ const AppShell = dynamic(
   async () => {
     const { MainLayout } = await import("@/components/layout/MainLayout");
     const { WorkflowOrchestrator } = await import("@/components/layout/WorkflowOrchestrator");
-    return function AppShell({ children }: { children: React.ReactNode }) {
+    return function AppShell({ children }: { children?: React.ReactNode }) {
       return (
         <MainLayout>
           <WorkflowOrchestrator />
