@@ -4,22 +4,11 @@ import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import styles from "./page.module.css";
 
-// Ngăn chặn hoàn toàn SSR cho AppShell
-const AppContent = dynamic(
-  async () => {
-    const { MainLayout } = await import("@/components/layout/MainLayout");
-    const { WorkflowOrchestrator } = await import("@/components/layout/WorkflowOrchestrator");
-    return function AppShell() {
-      return (
-        <MainLayout>
-          <WorkflowOrchestrator />
-        </MainLayout>
-      );
-    };
-  },
+const AppShell = dynamic(
+  () => import("@/components/layout/AppShell").then(mod => mod.AppShell),
   {
     ssr: false,
-    loading: () => <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Đang nạp ứng dụng...</div>
+    loading: () => <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Đang nạp bộ khung ứng dụng...</div>
   }
 );
 
@@ -31,12 +20,12 @@ export default function Home() {
   }, []);
 
   if (!isClient) {
-    return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Đang khởi tạo...</div>;
+    return <div style={{ display: 'flex', height: '100vh', alignItems: 'center', justifyContent: 'center' }}>Đang khởi tạo hệ thống...</div>;
   }
 
   return (
     <main className={styles.container}>
-      <AppContent />
+      <AppShell />
     </main>
   );
 }
