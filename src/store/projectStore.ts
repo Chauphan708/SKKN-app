@@ -1,3 +1,4 @@
+'use client';
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { SkknProject, WorkflowData, FormData, SkknSection, SkknMetadata } from '../types';
