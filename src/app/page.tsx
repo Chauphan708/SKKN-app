@@ -1,3 +1,4 @@
+'use client';
 import dynamic from 'next/dynamic';
 import styles from "./page.module.css";
 

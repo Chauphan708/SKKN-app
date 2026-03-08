@@ -44,7 +44,7 @@ export const MainLayout = ({ children }: MainLayoutProps) => {
     }, []);
 
     if (!mounted) {
-        return <div className={styles.layout} style={{ visibility: 'hidden' }}>{children}</div>;
+        return <div className={styles.layout} style={{ visibility: 'hidden' }}></div>;
     }
 
     return (
