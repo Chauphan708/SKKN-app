@@ -10,12 +10,20 @@ import { generateJsonArray } from '@/lib/gemini/client';
 import { toast } from 'sonner';
 import { Sparkles, CheckCircle2, ArrowRight } from 'lucide-react';
 
+import { getStep1SolutionsPrompt, getStep1TopicsPrompt } from '@/lib/ai/prompts';
+import { useSettingsStore } from '@/store/settingsStore';
+import { AiInstructionModal, AiSettingsButton } from '@/components/ui/AiInstructionModal';
+
 export const Step1Research = () => {
-    const { workflowData, setWorkflowData, setCurrentView } = useWorkflowStore();
+    const { workflowData, formData, setWorkflowData, setCurrentView } = useWorkflowStore();
+    const { taskInstructions } = useSettingsStore();
 
     const [problemText, setProblemText] = useState(workflowData.userProblem || '');
     const [isGeneratingSolutions, setIsGeneratingSolutions] = useState(false);
     const [isGeneratingTopics, setIsGeneratingTopics] = useState(false);
+
+    // Modal state
+    const [activeAiModal, setActiveAiModal] = useState<{ id: string, title: string } | null>(null);
 
     // Xử lý AI Bước 1.1: Gợi ý giải pháp
     const handleGenerateSolutions = async () => {
@@ -26,9 +34,8 @@ export const Step1Research = () => {
 
         setIsGeneratingSolutions(true);
         try {
-            // PROMPT 1: Phân tích Nỗi đau -> Giải pháp sư phạm
-            const prompt = `Phân tích tình huống khó khăn sau trong giáo dục: "${problemText}". Hãy đóng vai một chuyên gia giáo dục xuất sắc, đề xuất 4-5 giải pháp sư phạm hoặc hoạt động thực tế (không cần quá lý thuyết) để khắc phục tình trạng này. Trả về mảng JSON chứa các string là các giải pháp đó.`;
-
+            const customInstruction = taskInstructions['step1-solutions'];
+            const prompt = getStep1SolutionsPrompt(problemText, formData, customInstruction);
             const solutions = await generateJsonArray<string>(prompt);
             setWorkflowData({
                 userProblem: problemText,
@@ -62,10 +69,9 @@ export const Step1Research = () => {
 
         setIsGeneratingTopics(true);
         try {
-            // PROMPT 2: Giải pháp -> Tên đề tài học thuật
-            const prompt = `Từ các giải pháp sư phạm sau: ${JSON.stringify(workflowData.chosenSolution)}. Hãy tổng hợp và viết ra 3 tên "Sáng kiến kinh nghiệm" (hoặc Biện pháp giáo dục) thật chuẩn xác theo văn phong của Bộ GD&ĐT Việt Nam (ngắn gọn, xúc tích, nêu bật phương pháp và đối tượng tác động). Trả về MẢNG JSON chứa 3 chuỗi tên đề tài.`;
-
-            const topics = await generateJsonArray<string>(prompt, false); // Dùng model mạnh hơn cho tên đề tài
+            const customInstruction = taskInstructions['step1-topics'];
+            const prompt = getStep1TopicsPrompt(workflowData.chosenSolution, formData, customInstruction);
+            const topics = await generateJsonArray<string>(prompt, false);
             setWorkflowData({ suggestedTopics: topics });
             toast.success('Đã sáng tạo xong Đề tài!');
         } catch (error) {
@@ -105,7 +111,11 @@ export const Step1Research = () => {
                     rows={4}
                 />
 
-                <div className={styles.actionRow}>
+                <div className={styles.actionRow} style={{ justifyContent: 'space-between' }}>
+                    <AiSettingsButton
+                        onClick={() => setActiveAiModal({ id: 'step1-solutions', title: 'Gợi ý giải pháp' })}
+                        hasInstruction={!!taskInstructions['step1-solutions']}
+                    />
                     <Button
                         onClick={handleGenerateSolutions}
                         isLoading={isGeneratingSolutions}
@@ -144,7 +154,11 @@ export const Step1Research = () => {
                         })}
                     </div>
 
-                    <div className={styles.actionRow}>
+                    <div className={styles.actionRow} style={{ justifyContent: 'space-between' }}>
+                        <AiSettingsButton
+                            onClick={() => setActiveAiModal({ id: 'step1-topics', title: 'Sáng tạo tên đề tài' })}
+                            hasInstruction={!!taskInstructions['step1-topics']}
+                        />
                         <Button
                             variant="secondary"
                             onClick={handleGenerateTopics}
@@ -152,7 +166,7 @@ export const Step1Research = () => {
                             disabled={isGeneratingTopics || workflowData.chosenSolution.length === 0}
                         >
                             <Sparkles size={16} />
-                            Từ giải pháp này, đẻ ra rên Đề Tài
+                            Từ giải pháp này, đẻ ra tên Đề Tài
                         </Button>
                     </div>
                 </Card>
@@ -183,6 +197,13 @@ export const Step1Research = () => {
                     </div>
                 </Card>
             )}
+            {/* Modals */}
+            <AiInstructionModal
+                isOpen={!!activeAiModal}
+                onClose={() => setActiveAiModal(null)}
+                taskId={activeAiModal?.id || ''}
+                taskTitle={activeAiModal?.title || ''}
+            />
         </div>
     );
 };

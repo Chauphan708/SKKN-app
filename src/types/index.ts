@@ -51,7 +51,28 @@ export interface SkknMetadata {
     userName: string;
 }
 
+export type ProviderType = 'gemini' | 'openai' | 'claude';
+
+export interface AiInstruction {
+    id: string;
+    title: string;
+    content: string;
+}
+
+export interface AiSettings {
+    providers: {
+        gemini?: { apiKey: string; model: string };
+        openai?: { apiKey: string; model: string };
+        claude?: { apiKey: string; model: string };
+    };
+    preferredProvider: ProviderType;
+    useUserKeys: boolean;
+    taskInstructions: Record<string, string>; // e.g., { "step1-solutions": "...", "step4-detail": "..." }
+    instructionBank: AiInstruction[];
+}
+
 export interface SkknProject {
+    // ... existing fields
     id?: string;
     user_id?: string;
     title: string;

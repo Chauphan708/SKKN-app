@@ -11,37 +11,22 @@ import {
     Paperclip,
     Download,
     Moon,
-    Sun
+    Sun,
+    Settings
 } from 'lucide-react';
+import { SettingsModal } from './SettingsModal';
 
 export const Sidebar = () => {
-    const { currentView } = useWorkflowStore();
-    const [isDarkMode, setIsDarkMode] = useState(false);
+    const { currentView, theme, toggleTheme } = useWorkflowStore();
+    const [isSettingsOpen, setIsSettingsOpen] = React.useState(false);
 
-    // Xử lý bật tắt Dark Mode
+    // Xử lý bật tắt Dark Mode - Sync with stored theme on mount
     useEffect(() => {
-        // Lấy config từ LocalStorage ra khi tải trang mới
-        const storedTheme = localStorage.getItem('theme');
-        if (storedTheme === 'dark') {
-            setIsDarkMode(true);
-            document.documentElement.classList.add('dark');
-        } else {
-            setIsDarkMode(false);
-            document.documentElement.classList.remove('dark');
+        const storedTheme = localStorage.getItem('theme') as 'light' | 'dark';
+        if (storedTheme === 'dark' && theme === 'light') {
+            toggleTheme();
         }
-    }, []);
-
-    const toggleTheme = () => {
-        if (isDarkMode) {
-            document.documentElement.classList.remove('dark');
-            localStorage.setItem('theme', 'light');
-            setIsDarkMode(false);
-        } else {
-            document.documentElement.classList.add('dark');
-            localStorage.setItem('theme', 'dark');
-            setIsDarkMode(true);
-        }
-    };
+    }, [theme, toggleTheme]);
 
     const getIsActive = (stepView: string, id: number) => {
         if (currentView === 'generator') return stepView === 'step1';
@@ -85,18 +70,28 @@ export const Sidebar = () => {
             <div className={styles.footer} style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                 <div
                     className={styles.helpLink}
+                    onClick={() => setIsSettingsOpen(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', borderRadius: '8px', background: 'var(--background)' }}
+                >
+                    <Settings size={18} />
+                    <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>Cấu hình AI</span>
+                </div>
+                <div
+                    className={styles.helpLink}
                     onClick={toggleTheme}
                     style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', padding: '10px', borderRadius: '8px', background: 'var(--background)' }}
                 >
-                    {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+                    {theme === 'dark' ? <Sun size={18} /> : <Moon size={18} />}
                     <span style={{ fontSize: '0.9rem', fontWeight: 500 }}>
-                        {isDarkMode ? 'Bật nền sáng' : 'Bật nền tối'}
+                        {theme === 'dark' ? 'Bật nền sáng' : 'Bật nền tối'}
                     </span>
                 </div>
                 <div className={styles.helpLink}>
                     <span>📖 Hướng dẫn sử dụng</span>
                 </div>
             </div>
+
+            <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
         </aside>
     );
 };

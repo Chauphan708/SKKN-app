@@ -7,47 +7,35 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { toast } from 'sonner';
 import { ArrowRight, Sparkles, Save, ChevronRight } from 'lucide-react';
+import { getStep3GeneralContentPrompt } from '@/lib/ai/prompts';
 import { streamText } from '@/lib/gemini/client';
+import { useSettingsStore } from '@/store/settingsStore';
+import { AiInstructionModal, AiSettingsButton } from '@/components/ui/AiInstructionModal';
 
 export const Step3Content = () => {
     const { workflowData, formData, skknSections, updateSection, setCurrentView } = useWorkflowStore();
+    const { taskInstructions } = useSettingsStore();
     const [generatingId, setGeneratingId] = useState<string | null>(null);
 
-    const generateContextPrompt = (sectionTitle: string) => {
-        return `Bạn là một chuyên gia giáo dục xuất sắc. Nhiệm vụ của bạn là viết nội dung cho mục "${sectionTitle}" của một Sáng kiến kinh nghiệm (SKKN).
-        
-THÔNG TIN CHUNG VỀ SKKN:
-- Tên đề tài: ${workflowData.chosenTopic[0] || formData.deTai}
-- Khó khăn/Nỗi đau gặp phải: ${workflowData.userProblem}
-- Giải pháp cốt lõi: ${workflowData.chosenSolution.join(', ')}
-- Tác giả: ${formData.tenTacGia}, Chức vụ: ${formData.chucVu}, Chuyên môn: ${formData.chuyenMon}
-- Đơn vị: ${formData.tenTruong}, ${formData.huyenThanhPho}, ${formData.tinh}
-- Đối tượng áp dụng: Học sinh ${formData.capHoc} (Tổng số: ${formData.tongSoHS} học sinh)
-
-CẤU TRÚC SKKN TỔNG THỂ DỰ KIẾN:
-${skknSections.map(s => s.title).join('\n')}
-
-YÊU CẦU DÀNH BIỆT CHO MỤC NÀY:
-- Viết bằng giọng văn học thuật, chuyên môn sư phạm, rành mạch, chia đoạn rõ ràng.
-- Gắn liền với bối cảnh thực tế đã cung cấp ở trên.
-- Chỉ viết nội dung của mục "${sectionTitle}", không vẽ vời các mục khác.
-- LƯU Ý: Không dùng markdown \`\`\` để bọc văn bản. Trả về văn bản thuần.`;
-    };
+    // Modal state
+    const [activeAiModal, setActiveAiModal] = useState<{ id: string, title: string } | null>(null);
 
     const handleGenerateAi = async (id: string, title: string) => {
         setGeneratingId(id);
         toast.info(`Đang nhờ AI viết mục: ${title}...`);
-        
+
         try {
-            const prompt = generateContextPrompt(title);
-            
+            const taskId = `step3-${id}`;
+            const customInstruction = taskInstructions[taskId];
+            const prompt = getStep3GeneralContentPrompt(title, workflowData, formData, skknSections, customInstruction);
+
             // Xóa nội dung cũ
             updateSection(id, '');
 
             await streamText(prompt, (chunk) => {
                 updateSection(id, chunk);
             });
-            
+
             toast.success(`Đã viết xong mục: ${title}`);
         } catch (error) {
             toast.error('Có lỗi xảy ra khi gọi AI. Vui lòng thử lại!');
@@ -62,7 +50,7 @@ YÊU CẦU DÀNH BIỆT CHO MỤC NÀY:
 
     const lockAndNext = () => {
         toast.success('Đã lưu nội dung các phần chung. Chuyển sang Bước 4!');
-        setCurrentView('step4'); 
+        setCurrentView('step4');
     };
 
     return (
@@ -81,10 +69,14 @@ YÊU CẦU DÀNH BIỆT CHO MỤC NÀY:
                         <Card key={section.id} className={styles.sectionItem}>
                             <div className={styles.sectionHeader}>
                                 <h3>{section.title}</h3>
-                                <div className={styles.actions}>
-                                    <Button 
-                                        variant="secondary" 
-                                        size="sm" 
+                                <div className={styles.actions} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <AiSettingsButton
+                                        onClick={() => setActiveAiModal({ id: `step3-${section.id}`, title: section.title })}
+                                        hasInstruction={!!taskInstructions[`step3-${section.id}`]}
+                                    />
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
                                         onClick={() => handleGenerateAi(section.id, section.title)}
                                         disabled={generatingId !== null}
                                     >
@@ -111,6 +103,14 @@ YÊU CẦU DÀNH BIỆT CHO MỤC NÀY:
                     <ArrowRight size={18} />
                 </Button>
             </div>
+
+            {/* Modals */}
+            <AiInstructionModal
+                isOpen={!!activeAiModal}
+                onClose={() => setActiveAiModal(null)}
+                taskId={activeAiModal?.id || ''}
+                taskTitle={activeAiModal?.title || ''}
+            />
         </div>
     );
 };
