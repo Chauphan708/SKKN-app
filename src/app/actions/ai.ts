@@ -15,12 +15,35 @@ const getModels = () => {
     return { model, fastModel };
 };
 
+/**
+ * Helper to clean and parse JSON from AI response
+ */
+function parseJsonResponse<T>(text: string): T[] {
+    try {
+        const cleanedText = text
+            .replace(/```json\n?|```\n?/g, '')
+            .trim();
+        const parsed = JSON.parse(cleanedText);
+        if (Array.isArray(parsed)) return parsed as T[];
+        if (typeof parsed === 'object' && parsed !== null) {
+            const keys = Object.keys(parsed);
+            for (const key of keys) {
+                if (Array.isArray(parsed[key])) return parsed[key] as T[];
+            }
+            return [parsed] as unknown as T[];
+        }
+        return [] as T[];
+    } catch (error) {
+        console.error("JSON Parse Error (Gemini):", error, "Original text:", text);
+        throw new Error("Dữ liệu AI không hợp lệ. Vui lòng thử lại.");
+    }
+}
+
 export async function generateAction<T>(prompt: string, isFast = true): Promise<T[]> {
     try {
         const { model, fastModel } = getModels();
         const selectedModel = isFast ? fastModel : model;
 
-        // Use JSON response mode for reliability
         const result = await selectedModel.generateContent({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
             generationConfig: {
@@ -29,10 +52,10 @@ export async function generateAction<T>(prompt: string, isFast = true): Promise<
         });
 
         const text = result.response.text();
-        return JSON.parse(text) as T[];
+        return parseJsonResponse<T>(text);
     } catch (error) {
         console.error("Server Action Error (Gemini):", error);
-        throw new Error("Không thể kết nối đến Trợ lý AI từ máy chủ. Vui lòng thử lại sau.");
+        throw new Error(error instanceof Error ? error.message : "Không thể kết nối đến Trợ lý AI từ máy chủ. Vui lòng thử lại sau.");
     }
 }
 

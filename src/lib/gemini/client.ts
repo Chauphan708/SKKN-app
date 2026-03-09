@@ -15,9 +15,18 @@ export async function generateJsonArray<T>(prompt: string, isFast = true): Promi
     const model = config?.model;
 
     try {
-        return await universalAiAction<T>(prompt, preferredProvider, userKey, model);
+        const results = await universalAiAction<T>(prompt, preferredProvider, userKey, model);
+
+        // Ensure results is actually an array before returning
+        if (!Array.isArray(results)) {
+            console.warn("AI didn't return an array, fixing layout:", results);
+            return [results] as unknown as T[];
+        }
+
+        return results;
     } catch (error) {
-        console.error("AI Error:", error);
+        console.error("AI client error:", error);
+        // Throw meaningful error for toast
         throw error;
     }
 }
