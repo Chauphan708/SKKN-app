@@ -1,6 +1,7 @@
 'use server';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ActionResult } from '@/types';
 
 /**
  * Helper to clean and parse JSON from AI response
@@ -43,19 +44,19 @@ export async function universalAiAction<T>(
     provider: 'gemini' | 'openai' | 'claude',
     userApiKey?: string,
     modelName?: string
-): Promise<T[]> {
+): Promise<ActionResult<T[]>> {
     const apiKey = userApiKey || process.env[`${provider.toUpperCase()}_API_KEY`];
 
-    if (!apiKey && provider === 'gemini') {
-        // Fallback for Gemini if no key provided and env exists
-        // (Handled by the check below but adding clarity)
-    }
-
     if (!apiKey) {
-        throw new Error(`Chưa có API Key cho ${provider}. Vui lòng kiểm tra lại trong phần Cấu hình.`);
+        return {
+            success: false,
+            error: `Chưa có API Key cho ${provider}. Vui lòng kiểm tra lại trong phần Cấu hình.`
+        };
     }
 
     try {
+        let resultData: T[] = [];
+
         if (provider === 'gemini') {
             const genAI = new GoogleGenerativeAI(apiKey);
             const model = genAI.getGenerativeModel({ model: modelName || "gemini-1.5-flash" });
@@ -69,10 +70,8 @@ export async function universalAiAction<T>(
             });
 
             const text = result.response.text();
-            return parseJsonResponse<T>(text);
-        }
-
-        if (provider === 'openai') {
+            resultData = parseJsonResponse<T>(text);
+        } else if (provider === 'openai') {
             const response = await fetch('https://api.openai.com/v1/chat/completions', {
                 method: 'POST',
                 headers: {
@@ -91,17 +90,18 @@ export async function universalAiAction<T>(
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`OpenAI Error: ${errorData.error?.message || response.statusText}`);
+                return {
+                    success: false,
+                    error: `OpenAI Error: ${errorData.error?.message || response.statusText}`
+                };
             }
 
             const data = await response.json();
             const content = data.choices[0]?.message?.content;
-            if (!content) throw new Error("OpenAI không trả về nội dung.");
+            if (!content) return { success: false, error: "OpenAI không trả về nội dung." };
 
-            return parseJsonResponse<T>(content);
-        }
-
-        if (provider === 'claude') {
+            resultData = parseJsonResponse<T>(content);
+        } else if (provider === 'claude') {
             const response = await fetch('https://api.anthropic.com/v1/messages', {
                 method: 'POST',
                 headers: {
@@ -118,21 +118,26 @@ export async function universalAiAction<T>(
 
             if (!response.ok) {
                 const errorData = await response.json();
-                throw new Error(`Claude Error: ${errorData.error?.message || response.statusText}`);
+                return {
+                    success: false,
+                    error: `Claude Error: ${errorData.error?.message || response.statusText}`
+                };
             }
 
             const data = await response.json();
             const text = data.content[0].text;
-            return parseJsonResponse<T>(text);
+            resultData = parseJsonResponse<T>(text);
+        } else {
+            return { success: false, error: "Provider không hợp lệ." };
         }
 
-        throw new Error("Provider không hợp lệ.");
+        return { success: true, data: resultData };
+
     } catch (error) {
         console.error(`Error with ${provider}:`, error);
-        // Nếu đã là Error của chúng ta (có message tiếng Việt), ném tiếp
-        if (error instanceof Error && error.message.includes('API Key')) {
-            throw error;
-        }
-        throw new Error(`Lỗi khi gọi AI (${provider}). Vui lòng kiểm tra lại cấu hình hoặc thử lại sau.`);
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : `Lỗi khi gọi AI (${provider}). Vui lòng thử lại sau.`
+        };
     }
 }

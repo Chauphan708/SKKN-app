@@ -15,7 +15,13 @@ export async function generateJsonArray<T>(prompt: string, isFast = true): Promi
     const model = config?.model;
 
     try {
-        const results = await universalAiAction<T>(prompt, preferredProvider, userKey, model);
+        const result = await universalAiAction<T>(prompt, preferredProvider, userKey, model);
+
+        if (!result.success) {
+            throw new Error(result.error || "Lỗi không xác định từ AI");
+        }
+
+        const results = result.data || [];
 
         // Ensure results is actually an array before returning
         if (!Array.isArray(results)) {
@@ -26,7 +32,6 @@ export async function generateJsonArray<T>(prompt: string, isFast = true): Promi
         return results;
     } catch (error) {
         console.error("AI client error:", error);
-        // Throw meaningful error for toast
         throw error;
     }
 }
@@ -42,12 +47,18 @@ export async function streamText(prompt: string, onChunk: (text: string) => void
     const model = config?.model;
 
     try {
-        // Tạm thời gọi wrapper chung
-        const results = await universalAiAction<string>(prompt, preferredProvider, userKey, model);
+        const result = await universalAiAction<string>(prompt, preferredProvider, userKey, model);
+
+        if (!result.success) {
+            throw new Error(result.error || "Lỗi khi sinh nội dung");
+        }
+
+        const results = result.data || '';
         const text = Array.isArray(results) ? results.join('\n') : String(results);
         onChunk(text);
         return text;
     } catch (error) {
+        console.error("Stream AI error:", error);
         throw error;
     }
 }

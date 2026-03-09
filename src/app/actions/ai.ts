@@ -1,12 +1,12 @@
 'use server';
 
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { ActionResult } from '@/types';
 
 const getModels = () => {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey && process.env.NODE_ENV === 'production') {
         console.error('GEMINI_API_KEY is not configured');
-        // Không throw nữa để tránh sập render, chỉ trả về model lỗi khi gọi thực tế
     }
     const genAI = new GoogleGenerativeAI(apiKey || 'dummy_key');
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
@@ -39,7 +39,7 @@ function parseJsonResponse<T>(text: string): T[] {
     }
 }
 
-export async function generateAction<T>(prompt: string, isFast = true): Promise<T[]> {
+export async function generateAction<T>(prompt: string, isFast = true): Promise<ActionResult<T[]>> {
     try {
         const { model, fastModel } = getModels();
         const selectedModel = isFast ? fastModel : model;
@@ -52,22 +52,27 @@ export async function generateAction<T>(prompt: string, isFast = true): Promise<
         });
 
         const text = result.response.text();
-        return parseJsonResponse<T>(text);
+        const data = parseJsonResponse<T>(text);
+        return { success: true, data };
     } catch (error) {
         console.error("Server Action Error (Gemini):", error);
-        throw new Error(error instanceof Error ? error.message : "Không thể kết nối đến Trợ lý AI từ máy chủ. Vui lòng thử lại sau.");
+        return {
+            success: false,
+            error: error instanceof Error ? error.message : "Không thể kết nối đến Trợ lý AI từ máy chủ. Vui lòng thử lại sau."
+        };
     }
 }
 
-export async function streamAction(prompt: string) {
-    // Note: Streaming over Server Actions requires specific handling (like AI SDK or custom ReadableStream)
-    // For now, we provide a non-streaming version or use a standard response
+export async function streamAction(prompt: string): Promise<ActionResult<string>> {
     try {
         const { model } = getModels();
         const result = await model.generateContent(prompt);
-        return result.response.text();
+        return { success: true, data: result.response.text() };
     } catch (error) {
         console.error("Server Action Error (Gemini Stream):", error);
-        throw new Error("Lỗi khi sinh nội dung từ máy chủ.");
+        return {
+            success: false,
+            error: "Lỗi khi sinh nội dung từ máy chủ."
+        };
     }
 }

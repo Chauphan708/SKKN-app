@@ -86,3 +86,9 @@ export interface SkknProject {
     combinedTopics: string[];
     _meta: SkknMetadata;
 }
+
+export interface ActionResult<T> {
+    success: boolean;
+    data?: T;
+    error?: string;
+}
